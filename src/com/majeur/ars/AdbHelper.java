@@ -1,19 +1,28 @@
 package com.majeur.ars;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URLDecoder;
 import java.util.Scanner;
 
 import javax.swing.JTextArea;
 
 public class AdbHelper {
 	
-	private String mAdbPath = "/home/pdroid/sdk/platform-tools/adb"; //TODO
+	private String mAdbPath;
 	
 	private JTextArea mTextArea;
+	
+	public void setAdbPath(String path) {
+		mAdbPath = path;
+	}
+	
+	public boolean isPathValid() {
+		return mAdbPath != null;
+	}
+	
+	public boolean isFileValid() {
+		return new File(mAdbPath).exists();
+	}
 	
 	public void performScreenShot(File file) {
 		String commandLine = mAdbPath + " shell screencap -p | perl -pe \'BEGIN { $/=\"\\cM\\cJ\"; $\\=\"\\cJ\"; } chomp;\' > " 

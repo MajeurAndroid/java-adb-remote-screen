@@ -50,7 +50,7 @@ public class NumberChooserPanel extends JPanel {
 			mListener.onValueChanged(value);
 		
 		mPlusButton.setEnabled(mValue < 100);
-		mMinusButton.setEnabled(mValue > 10);
+		mMinusButton.setEnabled(mValue > 20);
 	}
 	
 	public int getValue() {

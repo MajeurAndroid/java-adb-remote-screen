@@ -8,6 +8,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -22,8 +24,45 @@ import javax.swing.JToggleButton;
 
 public class AdbRemoteScreen {
 
-	public static void main(String[] args) {
+	public static void main(String... args) {
 		final AdbHelper adbHelper = new AdbHelper();
+		if (args.length == 0) {
+			File properties = new File("local.properties");
+			if (properties.exists()) {
+				try {
+					Scanner scanner = new Scanner(properties);
+					String fileContent = scanner.nextLine();
+					
+					while (scanner.hasNextLine()) {
+						String line = scanner.nextLine();
+						if (!line.startsWith("#")) {
+							fileContent = line;
+							break;
+						}
+						
+					}
+					scanner.close();
+					
+					String adbPath = fileContent.substring(8, fileContent.length());
+					adbHelper.setAdbPath(adbPath);
+					System.out.println(adbPath);
+				} catch(FileNotFoundException e) {
+					
+				}
+			}
+		} else {
+			adbHelper.setAdbPath(args[0]);
+		}
+		
+		if (!adbHelper.isPathValid()) {
+			JOptionPane.showMessageDialog(null, Constants.Strings.MESSAGE_NO_ADB_PATH, Constants.Strings.TITLE_NO_ADB_PATH, JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		
+		if (!adbHelper.isFileValid()) {
+			JOptionPane.showMessageDialog(null, Constants.Strings.MESSAGE_NO_ADB_FILE, Constants.Strings.TITLE_NO_ADB_FILE, JOptionPane.ERROR_MESSAGE);
+			return;
+		}
 				
 		MainFrame frame = new MainFrame();
 		frame.setVisible(true);
@@ -54,12 +93,12 @@ public class AdbRemoteScreen {
 		savePanel.add(saveScreenShot);
 		panel.add(savePanel);
 		
-		JPanel updatePanel = new JPanel();
-	    updatePanel.setBorder(BorderFactory.createTitledBorder("Screen rendering"));
-		JCheckBox checkBox = new JCheckBox();
-		checkBox.setText("Update");
-		checkBox.setSelected(true);
-		checkBox.addItemListener(new ItemListener() {			
+		JPanel screenPanel = new JPanel();
+	    screenPanel.setBorder(BorderFactory.createTitledBorder("Screen rendering"));
+		JCheckBox updateCheckBox = new JCheckBox();
+		updateCheckBox.setText("Update");
+		updateCheckBox.setSelected(true);
+		updateCheckBox.addItemListener(new ItemListener() {			
 			@Override
 			public void itemStateChanged(ItemEvent e) {
 				if (e.getStateChange() == ItemEvent.DESELECTED)
@@ -68,8 +107,21 @@ public class AdbRemoteScreen {
 					controlPanel.startUpdate();
 			}
 		});
-		updatePanel.add(checkBox);		
-		panel.add(updatePanel);
+		screenPanel.add(updateCheckBox);	
+		JCheckBox landscapeCheckBox = new JCheckBox();
+		landscapeCheckBox.setText("Landscape");
+		landscapeCheckBox.setSelected(false);
+		landscapeCheckBox.addItemListener(new ItemListener() {			
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.DESELECTED)
+					controlPanel.setLandscape(false);
+				else if (e.getStateChange() == ItemEvent.SELECTED)
+					controlPanel.setLandscape(true);
+			}
+		});
+		screenPanel.add(landscapeCheckBox);
+		panel.add(screenPanel);
 	    
 	    JPanel controlPanelScale = new JPanel();
 	    NumberChooserPanel numberChooser = new NumberChooserPanel();
