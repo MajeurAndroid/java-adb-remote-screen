@@ -150,7 +150,8 @@ public class AdbRemoteScreen {
 		System.out.println("start");
 		frame.getContentPane().add(panel, BorderLayout.WEST);
 		frame.getContentPane().add(controlPanel, BorderLayout.CENTER);
-		
+		frame.pack();
+
 
 		String devices = adbHelper.executeAdbCommand("devices");
 		if (!devices.matches(".*\\d.*"))
