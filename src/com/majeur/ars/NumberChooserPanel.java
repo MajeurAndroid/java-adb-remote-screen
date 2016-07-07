@@ -15,7 +15,7 @@ public class NumberChooserPanel extends JPanel {
 	private int mValue;
 	private OnValueChangedListener mListener;
 	
-	public NumberChooserPanel() {
+	public NumberChooserPanel(String title) {
 		
 		mMinusButton = new JButton();
 		mMinusButton.setText("-");
@@ -38,9 +38,13 @@ public class NumberChooserPanel extends JPanel {
 		mTextArea = new JTextArea();
 		mTextArea.setEditable(false);
 		
+		JTextArea titleTextArea = new JTextArea(title);
+		titleTextArea.setEditable(false);
+		
 		add(mMinusButton, BorderLayout.WEST);
 		add(mTextArea, BorderLayout.CENTER);
 		add(mPlusButton, BorderLayout.EAST);
+		add(titleTextArea, BorderLayout.NORTH);
 	}
 
 	public void setValue(int value) {

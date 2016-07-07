@@ -14,15 +14,20 @@ import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 
 import javax.imageio.ImageIO;
+import javax.management.loading.PrivateMLet;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
-public class ControlPanel extends JPanel implements MouseListener, KeyListener {
+import org.omg.CORBA.PRIVATE_MEMBER;
 
+public class ScreenPanel extends JPanel implements MouseListener, KeyListener {
+	
+	private static final long MIN_SCREEN_REFRESH_INTERVAL = 250;
 	private AdbHelper mAdbHelper;
 	private BufferedImage mImage;
-	private File mImageFile;
 	private int mScreenWidth = 0, mScreenHeight = 0;
 	private double mRatio;
 	private boolean mFirstDraw = true, mUpdateFrame = false;
@@ -30,12 +35,13 @@ public class ControlPanel extends JPanel implements MouseListener, KeyListener {
 	private int mDownX, mDownY;
 	private long mSwipeStartTime;
 	private boolean mLandscape = false;
+	
+	private boolean mPaused;
 
 	protected Thread mUpdateThread;
 
-	public ControlPanel(AdbHelper helper) {
+	public ScreenPanel(AdbHelper helper) {
 		mAdbHelper = helper;
-		mImageFile = new File("screen.png");
 		addMouseListener(this);
 		addKeyListener(this);
 
@@ -49,45 +55,38 @@ public class ControlPanel extends JPanel implements MouseListener, KeyListener {
 			public void componentResized(ComponentEvent e) {
 				requestFocus();
 				requestFocusInWindow();
-
-				startUpdate();
 			}
 		});
 	}
 
 	public void startUpdate() {
-		System.out.println("startUpdate");
+		if (mPaused)
+			return;
+		
+		Logger.i("Start rendering device screen");
 		if (mUpdateThread != null && !mUpdateThread.isInterrupted())
 			stopUpdate();
 
-		mUpdateThread = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				while (!Thread.interrupted()) {
-					mAdbHelper.performScreenShot(mImageFile);
-
-					try {
-						mImage = ImageIO.read(mImageFile);
-						repaint();
-					} catch (IOException e) {
-
-					}
-
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException ex) {
-						break;
-					}
-				}
-			}
-		});
+		mUpdateThread = new UpdateThread();
 		mUpdateThread.start();
 	}
 
 	public void stopUpdate() {
-		System.out.println("stopUpdate");
+		if (mUpdateThread == null)
+			return;
+		
+		Logger.i("Stop rendering device screen");
 		mUpdateThread.interrupt();
 		mUpdateThread = null;
+	}
+	
+	public void setPaused(boolean paused) {
+		mPaused = paused;
+		
+		if (paused)
+			stopUpdate();
+		else 
+			startUpdate();
 	}
 
 	public void setScale(double scale) {
@@ -198,6 +197,55 @@ public class ControlPanel extends JPanel implements MouseListener, KeyListener {
 	public void mouseExited(MouseEvent e) {
 		// TODO Auto-generated method stub
 
+	}
+	
+	private class UpdateThread extends Thread {
+
+		@Override
+		public void run() {
+			super.run();			
+			long previousFrameTime = System.currentTimeMillis();
+			
+			while (!Thread.interrupted()) {
+				long currentFrameTime = System.currentTimeMillis();
+				long dT = currentFrameTime - previousFrameTime;
+				previousFrameTime = currentFrameTime;
+				
+				if (LocalProperties.limitFrameRate && dT < MIN_SCREEN_REFRESH_INTERVAL) 
+					Utils.sleep(MIN_SCREEN_REFRESH_INTERVAL - dT);
+
+				mImage = mAdbHelper.retrieveScreenShot();
+				
+				if (mImage == null)
+					abort();
+				
+				repaintPanel();
+			}
+		}
+		
+		private void abort() {
+			interrupt();
+			SwingUtilities.invokeLater(new Runnable() {				
+				@Override
+				public void run() {
+					stopUpdate();					
+				}
+			});
+		}
+		
+		private void repaintPanel() {			
+			try {
+				SwingUtilities.invokeAndWait(new Runnable() {						
+					@Override
+					public void run() {
+						repaint();							
+					}
+				});
+			} catch (InvocationTargetException | InterruptedException e) {
+				abort();
+				e.printStackTrace();
+			}
+		}
 	}
 
 }

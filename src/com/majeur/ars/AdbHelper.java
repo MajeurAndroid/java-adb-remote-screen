@@ -1,100 +1,158 @@
 package com.majeur.ars;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Scanner;
 
+import javax.imageio.ImageIO;
 import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 
 public class AdbHelper {
 	
-	private String mAdbPath;
+	private DevicesWatcher mDevicesWatcher;	
+	private final String mAdbPath;
 	
-	private JTextArea mTextArea;
+	private String mDevice;
 	
-	public void setAdbPath(String path) {
+	public AdbHelper(String path) {
 		mAdbPath = path;
 	}
 	
-	public boolean isPathValid() {
-		return mAdbPath != null;
+	public void registerDevicesChangedListener(OnDevicesChangedListener listener) {
+		mDevicesWatcher = new DevicesWatcher(listener);
+		mDevicesWatcher.startWach();
 	}
 	
-	public boolean isFileValid() {
-		return new File(mAdbPath).exists();
+	public void unregisterDevicesChangedListener() {
+		mDevicesWatcher.stopWatch();
+		mDevicesWatcher = null;
 	}
 	
-	public void performScreenShot(File file) {
-		String commandLine = mAdbPath + " shell screencap -p | perl -pe \'BEGIN { $/=\"\\cM\\cJ\"; $\\=\"\\cJ\"; } chomp;\' > " 
-				+ file.getAbsolutePath();
-		executeCommand(new String[] {"/bin/sh", "-c", commandLine}, false);		
+	public void setTargetDevice(String device) {
+		mDevice = device;
+	}
+	
+	public void performInputKey(int keyCode) {
+		Logger.i("Key pressed (code: %d)", keyCode);
+		executeDeviceShellCommand(String.format(Constants.Adb.CMD_KEY, keyCode));
 	}
 	
 	public void performClick(double x, double y) {
-		updateInfo("Touch at " + x + "x" + y);
-		executeAdbShellCommand("input tap " + x + " " + y);
+		Logger.i("Click at %.1fx%.1f", x, y);
+		executeDeviceShellCommand(String.format(Constants.Adb.CMD_TAP, x, y).replace(',', '.'));
 	}
 	
 	public void performSwipe(double x1, double y1, double x2, double y2, long duration) {
-		updateInfo("Swipe from " + x1 + "x" + y1 + " " + x2 + "x" + y2 + " while " + duration + "ms");
-		executeAdbShellCommand("input swipe " + x1 + " " + y1 + " " + x2 + " " + y2 + " " + duration);
+		Logger.i("Swipe from %.1fx%.1f to %.1fx%.1f during %d ms", x1, y1, x2, y2, duration);
+		executeDeviceShellCommand("input swipe " + x1 + " " + y1 + " " + x2 + " " + y2 + " " + duration);
 	}
 	
-	private String executeAdbShellCommand(String command) {
-		return executeAdbCommand("shell " + command);
+	private String executeDeviceShellCommand(String command) {
+		if (mDevice == null) {
+			Logger.e("No device selected, unable to execute '%s' command", command);
+			return null;
+		}
+		
+		return executeAdbCommand(String.format("-s %s shell %s", mDevice, command));
 	}
 	
 	public String executeAdbCommand(String command) {
-		return executeCommand(mAdbPath + " " + command);
+		return Utils.executeCommand(mAdbPath + " " + command);
 	}
-
-	private String executeCommand(String command) {
-		System.out.println(command);
-		StringBuilder builder = new StringBuilder();
+	
+	public String[] getConnectedDevices() {
+		String[] lines = executeAdbCommand("devices").split("\n");
 		
-		Runtime rut = Runtime.getRuntime();
-		try {
-		    Process process = rut.exec(command);
-		    // prints out any message that are usually displayed in the console
-		    Scanner scanner = new Scanner(process.getInputStream());
-		    while (scanner.hasNext()) {
-		        builder.append(scanner.nextLine());
-		    }
-		}catch(IOException e1) {
-		    e1.printStackTrace();
+		if (lines.length == 0)
+			return new String[0];
+		
+		List<String> devices = new LinkedList<>();
+		for (String line : lines) {
+			if (line.startsWith("adb server") || line.startsWith("List of devices attached"))
+				continue;
+			
+			devices.add(line.split("\t")[0]);
+		}		
+		
+		return devices.toArray(new String[devices.size()]);	
+	}
+	
+	public BufferedImage retrieveScreenShot() {
+		if (mDevice == null) {
+			Logger.e("No device selected, screenshot aborted");
+			return null;
 		}
 		
-		return builder.toString();
-	}
-	
-	private String executeCommand(String[] command, boolean requestResponse) {
-		String print = "";
-		for (String s : command) print += s +", ";
-		System.out.println(print);
-		StringBuilder builder = new StringBuilder();
+		final String command = String.format(Constants.Adb.CMD_SCREENCAP, mAdbPath, mDevice);
 		
-		Runtime rut = Runtime.getRuntime();
 		try {
-		    Process process = rut.exec(command);
-		    // prints out any message that are usually displayed in the console
-		    Scanner scanner = new Scanner(process.getInputStream());
-		    while (scanner.hasNext()) {
-		        builder.append(scanner.nextLine());
-		    }
-		    scanner.close();
-		}catch(IOException e1) {
-		    e1.printStackTrace();
+			return ImageIO.read(Utils.executeCommandGetInputStream("/bin/sh", "-c", command));
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
 		}
-		return builder.toString();
 	}
 	
-	public void setTextArea(JTextArea t) {
-		mTextArea = t;
-	}
-	
-	private void updateInfo(String string) {
-		if (mTextArea == null) return;
+	public boolean saveScreenShotToFile(File file) {
+		if (mDevice == null)
+			return false;
 		
-		mTextArea.setText(string);
+		String commandLine = String.format(Constants.Adb.CMD_SCREENCAP, mAdbPath, mDevice) + " > " + file.getAbsolutePath();
+		Utils.executeCommand("/bin/sh", "-c", commandLine);
+		return true;
+	}
+	
+	interface OnDevicesChangedListener {
+		void onDevicesChanged(String[] devices);
+	}
+	
+	private class DevicesWatcher implements Runnable {
+		
+		Thread mWatchThread;
+		private String[] mOldDevices;
+		private OnDevicesChangedListener mListener;
+		
+		public DevicesWatcher(OnDevicesChangedListener listener) {
+			mListener = listener;
+		}
+		
+		void startWach() {
+			mWatchThread = new Thread(this);
+			mWatchThread.start();
+		}
+		
+		void stopWatch() {
+			mWatchThread.interrupt();
+			mWatchThread = null;
+		}
+		
+		@Override
+		public void run() {
+			while (!Thread.interrupted()) {
+				final String[] newDevices = getConnectedDevices();
+				if (!Arrays.equals(newDevices, mOldDevices)) {
+					mOldDevices = newDevices;
+					SwingUtilities.invokeLater(new Runnable() {					
+						@Override
+						public void run() {
+							mListener.onDevicesChanged(newDevices);
+						}
+					});
+				}
+				
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}			
+		}		
 	}
 }
