@@ -7,8 +7,14 @@ Supports touches, swipes and keys input.
 ![alt tag](https://raw.githubusercontent.com/MajeurAndroid/Adb-Remote-Screen/master/web_demo.png)
 
 ### How to use
-First unzip the downloaded file anywhere you want. "local.properties" and "AdbRemoteScreen.jar" files **must** be in the same folder.
+Either unzip the downloaded file anywhere you want or compile it yourself. "local.properties" and "AdbRemoteScreen.jar" files **must** be in the same folder.
 AdbRemoteScreen needs ADB to work. You must provide an adb binary path in the local.properties file. (Or as an argument if you are running jars from command line)
+
+### How to compile
+
+    cd /path/to/Adb-Remote-Screen
+    ant compile
+    ant jar
 
 ###### From UI:
 

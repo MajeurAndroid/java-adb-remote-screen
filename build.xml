@@ -1,4 +1,4 @@
-<project>
+<project name="Adb-Remote-Screen" default="compile" basedir=".">
 
     <target name="clean">
         <delete dir="build"/>
@@ -8,6 +8,7 @@
         <mkdir dir="build/classes"/>
         <javac srcdir="src" destdir="build/classes"/>
     </target>
+
 
     <target name="jar">
         <jar destfile="AdbRemoteScreen.jar" basedir="build/classes">
