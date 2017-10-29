@@ -27,7 +27,7 @@ public final class Constants {
 	
 	public static final class Adb {
 		
-		public static final String CMD_SCREENCAP = "%s -s %s shell screencap -p | perl -pe \'BEGIN { $/=\"\\cM\\cJ\"; $\\=\"\\cJ\"; } chomp;\'";
+		public static final String CMD_SCREENCAP = "%s -s %s shell screencap -p";
 		public static final String CMD_TAP = "input tap %f %f";
 		public static final String CMD_SWIPE = "input swipe %f %f %f %f %d";
 		public static final String CMD_KEY = "input keyevent %d";
