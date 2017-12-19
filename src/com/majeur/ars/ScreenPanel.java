@@ -133,7 +133,11 @@ public class ScreenPanel extends JPanel implements MouseListener, KeyListener {
 
 			if (mLandscape) {
 				AffineTransform transform = new AffineTransform();
-				transform.rotate(Math.PI / 2, mImage.getWidth() / 2, mImage.getHeight() / 2);
+				double w = mImage.getWidth() / 2;
+				double h = mImage.getHeight() / 2;
+				transform.translate(h, w);
+				transform.rotate(Math.PI /2);
+				transform.translate(-w, - h);
 				AffineTransformOp op = new AffineTransformOp(transform, AffineTransformOp.TYPE_BILINEAR);
 				mImage = op.filter(mImage, null);
 			}
