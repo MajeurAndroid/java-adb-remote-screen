@@ -1,8 +1,4 @@
-/bin/
-*~
-screen.png
-/bin/
 .idea
 *.iml
-*.class
-
+target
+*~

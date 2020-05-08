@@ -21,8 +21,6 @@ import javax.management.loading.PrivateMLet;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import org.omg.CORBA.PRIVATE_MEMBER;
-
 public class ScreenPanel extends JPanel implements MouseListener, KeyListener {
 	
 	private static final long MIN_SCREEN_REFRESH_INTERVAL = 250;
