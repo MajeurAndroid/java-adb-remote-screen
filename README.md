@@ -1,14 +1,12 @@
 # Adb-Remote-Screen
-Simple tool to control your device through ADB. Useful to retrieve data for broken devices.
-Supports touches, swipes and keys input.
+A simple tool to control your device through ADB. Useful to retrieve data for broken devices.
+Supports touch, swipe and key inputs.
 
-[**DOWNLOAD**](https://github.com/MajeurAndroid/Adb-Remote-Screen/releases/download/2.0/AdbRemoteScreen.zip)
+[**DOWNLOAD**](https://github.com/MajeurAndroid/Adb-Remote-Screen/releases/download/3.0/AdbRemoteScreen-3.0.jar)
 
 ![alt tag](https://raw.githubusercontent.com/MajeurAndroid/Adb-Remote-Screen/master/web_demo.png)
 
 ### How to use
-First unzip the downloaded file anywhere you want. "local.properties" and "AdbRemoteScreen.jar" files **must** be in the same folder.
-AdbRemoteScreen needs ADB to work. You must provide an adb binary path in the local.properties file. (Or as an argument if you are running jars from command line)
 
 ###### From UI:
 
@@ -18,27 +16,27 @@ Right click on jar file > open with > Oracle Java X Runtime or OpenJDK X Runtime
 ```shell
 cd path/to/jar/file
 java -jar AdbRemoteScreen.jar
-#or
-java -jar AdbRemoteScreen.jar /path/to/adb/binary
+#or if custome adb binary
+java -jar AdbRemoteScreen.jar --adb-path=/path/to/adb/binary
+#or if any issue related to UI frameworks on linux
+java -jar AdbRemoteScreen.jar --use-default-theme
+#(or both arguments obviously)
 ```
 
-### New features in 2.0
-- Screenshots are now retrieved directly from device to computer's RAM through adb shell stream
-- Support for multiple connected devices
-- Added keys input support (all keys supported by Android are available)
-- Hot-Plug support (you can now unplug or plug a new device while running ARS, it will automatically detect changes)
+### New features in 3.0
+- Reviewed UI
+- Platform specific adb binaries are now bundled with the app
+- Optimizations and better resource handling
 - Fixed bugs
 
 ### TODOs
-- Add support for Windows
+- Add support for MAC OS
 - Add directory dialog to let user choose adb file through UI
 - Better handle device changes
-- 
-### Note
-I am new to Swing environement, do not hesitate to fork and pullrequest, even for just reimplementing functionalities already present but in a more convinient way.
+- ...
 
 ### License
 
-Copyright Majeur 2015-2016
+Copyright Majeur 2015-2020
 
 Licensed under Apache License 2.0

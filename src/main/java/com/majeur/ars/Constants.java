@@ -27,7 +27,7 @@ public final class Constants {
         public static final String TITLE_NO_DEVICE = "No device found";
         public static final String MESSAGE_NO_DEVICE = "Please connect a device to your computer.\n(Make sure you have enabled USB Debugging and unlocked your device if any security PIN or pattern has been set)";
 
-        public static final String ABOUT_MESSAGE = "<html><h1>Adb Remote Screen</h1><h3>Version 3.0</h3><h4>Author</h4><p>This program is developed by MajeurAndroid (<a href=\"mailto:majeur.android@gmail.com\">majeur.android@gmail.com</a>).</p><h4>Source</h4><p>This program is Open Source. Source code can be found on <a href=\"https://github.com/MajeurAndroid/Adb-Remote-Screen\">GitHub</a>.</p><h4>License</h4><q>Copyright 2018 MajeurAndroid<br/>Licensed under the Apache License, Version 2.0 (the \"License\"); you may not use this<br/>file except in compliance with the License.";
+        public static final String ABOUT_MESSAGE = "<html><h1>Adb Remote Screen</h1><h3>Version 3.0</h3><h4>Author</h4><p>This program is developed by MajeurAndroid (<a href=\"mailto:majeur.android@gmail.com\">majeur.android@gmail.com</a>).</p><h4>Source</h4><p>This program is Open Source. Source code can be found on <a href=\"https://github.com/MajeurAndroid/Adb-Remote-Screen\">GitHub</a>.</p><h4>License</h4><q>Copyright 2020 MajeurAndroid<br/>Licensed under the Apache License, Version 2.0 (the \"License\"); you may not use this<br/>file except in compliance with the License.";
     }
 
     public static final class Adb {
