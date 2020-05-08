@@ -8,36 +8,48 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AdbRemoteScreen implements Runnable {
 
-	private static String[] ARGS;
+	private static final Map<String, String> ARGS = new HashMap<>();
 
 	public static void main(String... args) {
-		ARGS = args;
+		for (String arg : args) {
+			if (arg.contains("=")) {
+				ARGS.put(arg.substring(0, arg.indexOf('=')),
+						arg.substring(arg.indexOf('=') + 1));
+			} else {
+				ARGS.put(arg, "");
+			}
+		}
 		EventQueue.invokeLater(new AdbRemoteScreen());
 	}
 
 	@Override
 	public void run() {
+		boolean skipSysLookAndFeel = ARGS.get("--use-default-theme") != null;
 		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			if (!skipSysLookAndFeel)
+				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
 				| UnsupportedLookAndFeelException e) {
 			e.printStackTrace();
 		}
 
-		String customAdbPath = ARGS.length == 0 ? LocalProperties.adbPath : ARGS[0];
+		String customAdbPath = ARGS.get("--adb-path");
 		File adbExecutable = loadCustomAdbExecutable(customAdbPath);
 
 		if (adbExecutable == null) {
 			adbExecutable = loadInternalAdbExecutable();
-			if (adbExecutable == null)
+			if (adbExecutable == null) {
+				System.out.println("Fatal error, cannot load adb binary.");
 				return;
+			}
 		}
 
-		final File adbExecutableFinal = adbExecutable;
-		new MainFrame(new AdbHelper(adbExecutableFinal));
+		new MainFrame(new AdbHelper(adbExecutable));
 	}
 
 	private File loadCustomAdbExecutable(String path) {
