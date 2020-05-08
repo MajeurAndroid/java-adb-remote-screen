@@ -178,7 +178,7 @@ public class AdbDeviceScreenComponent extends JComponent implements MouseListene
 				long dT = currentFrameTime - previousFrameTime;
 				previousFrameTime = currentFrameTime;
 
-				if (LocalProperties.limitFrameRate && dT < MIN_SCREEN_REFRESH_INTERVAL)
+				if (dT < MIN_SCREEN_REFRESH_INTERVAL)
 					Utils.sleep(MIN_SCREEN_REFRESH_INTERVAL - dT);
 
 				if (Thread.interrupted())
